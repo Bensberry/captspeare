@@ -77,7 +77,7 @@ export async function POST(req: Request) {
     const platformId = (platform || 'linkedin') as PlatformId
     const systemPrompt = getSystemPrompt(platformId, autoEmoji ?? true)
 
-    const geminiKey = process.env.GEMINI_API_KEY || "AIzaSyDWPsfVTnI-Aidgmb5BRbIm6YLsQS_oSFs"
+    const geminiKey = process.env.GEMINI_API_KEY
 
     if (geminiKey) {
       const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`
