@@ -3,10 +3,17 @@
 import { use, useState, useRef, useEffect } from "react"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { Feather, ArrowLeft, Mic, MicOff, Type, Wand2, Copy, RefreshCw, Check, Sparkles } from "lucide-react"
+import { Feather, ArrowLeft, Mic, MicOff, Type, Wand2, Copy, RefreshCw, Check, Sparkles, Hash } from "lucide-react"
 import { platforms, PlatformId } from "@/lib/platforms"
 import { getPlatformIcon } from "@/components/platform-icons"
 import { cn } from "@/lib/utils"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 interface PageProps {
   params: Promise<{ platform: string }>
@@ -28,6 +35,9 @@ export default function PlatformPage({ params }: PageProps) {
   const [recordingTime, setRecordingTime] = useState(0)
   const [copied, setCopied] = useState(false)
   const [autoEmoji, setAutoEmoji] = useState(true)
+  const [includeHashtags, setIncludeHashtags] = useState(true)
+  const [isLong, setIsLong] = useState(false)
+  const [tone, setTone] = useState<string>(platform.tones[0])
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
@@ -106,7 +116,14 @@ export default function PlatformPage({ params }: PageProps) {
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: inputText, platform: platform.id, autoEmoji })
+        body: JSON.stringify({ 
+          text: inputText, 
+          platform: platform.id, 
+          autoEmoji,
+          tone,
+          includeHashtags,
+          isLong
+        })
       })
       const data = await res.json()
       if (data.result) {
@@ -322,6 +339,64 @@ export default function PlatformPage({ params }: PageProps) {
                 </div>
                 <span className="text-sm text-muted-foreground">Emojis</span>
               </label>
+
+              {/* Hashtag Toggle */}
+              <label className="flex cursor-pointer items-center gap-2">
+                <div className="relative">
+                  <input
+                    type="checkbox"
+                    className="sr-only"
+                    checked={includeHashtags}
+                    onChange={(e) => setIncludeHashtags(e.target.checked)}
+                  />
+                  <div className={cn(
+                    "h-5 w-9 rounded-full transition-colors",
+                    includeHashtags ? platform.colors.primary : "bg-secondary"
+                  )} />
+                  <div className={cn(
+                    "absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform",
+                    includeHashtags ? "left-5" : "left-0.5"
+                  )} />
+                </div>
+                <span className="text-sm text-muted-foreground">Hashtags</span>
+              </label>
+
+              {/* Length Toggle */}
+              <label className="flex cursor-pointer items-center gap-2">
+                <div className="relative">
+                  <input
+                    type="checkbox"
+                    className="sr-only"
+                    checked={isLong}
+                    onChange={(e) => setIsLong(e.target.checked)}
+                  />
+                  <div className={cn(
+                    "h-5 w-9 rounded-full transition-colors",
+                    isLong ? platform.colors.primary : "bg-secondary"
+                  )} />
+                  <div className={cn(
+                    "absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform",
+                    isLong ? "left-5" : "left-0.5"
+                  )} />
+                </div>
+                <span className="text-sm text-muted-foreground">{isLong ? "Long" : "Short"}</span>
+              </label>
+
+              {/* Tone Selection */}
+              <div className="ml-2 flex items-center gap-2">
+                <Select value={tone} onValueChange={setTone}>
+                  <SelectTrigger size="sm" className="w-[140px] border-border/50 bg-secondary/30 backdrop-blur-sm">
+                    <SelectValue placeholder="Select tone" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {platform.tones.map((t) => (
+                      <SelectItem key={t} value={t}>
+                        {t}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <button
               onClick={handleGenerate}

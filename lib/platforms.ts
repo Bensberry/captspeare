@@ -6,6 +6,7 @@ export interface Platform {
   description: string
   placeholder: string
   outputLabel: string
+  tones: string[]
   colors: {
     primary: string
     primaryHover: string
@@ -25,6 +26,7 @@ export const platforms: Record<PlatformId, Platform> = {
     description: 'Professional captions that drive engagement',
     placeholder: 'Share your professional achievement, insight, or story...',
     outputLabel: 'LinkedIn Caption',
+    tones: ['Professional', 'Bold', 'Storytelling'],
     colors: {
       primary: 'bg-[#0A66C2]',
       primaryHover: 'hover:bg-[#004182]',
@@ -42,6 +44,7 @@ export const platforms: Record<PlatformId, Platform> = {
     description: 'Eye-catching captions for your visual stories',
     placeholder: 'Describe your photo, moment, or vibe...',
     outputLabel: 'Instagram Caption',
+    tones: ['Happy', 'Sad', 'Nonchalant'],
     colors: {
       primary: 'bg-gradient-to-r from-[#833AB4] via-[#E1306C] to-[#F77737]',
       primaryHover: 'hover:from-[#6B2D95] hover:via-[#C4285C] hover:to-[#D4652F]',
@@ -59,6 +62,7 @@ export const platforms: Record<PlatformId, Platform> = {
     description: 'Punchy tweets that go viral',
     placeholder: 'What thought do you want to share with the world?',
     outputLabel: 'Tweet',
+    tones: ['Happy', 'Sad', 'Nonchalant'],
     colors: {
       primary: 'bg-[#1d9bf0]',
       primaryHover: 'hover:bg-[#1a8cd8]',
@@ -76,6 +80,7 @@ export const platforms: Record<PlatformId, Platform> = {
     description: 'Click-worthy titles that boost views',
     placeholder: 'Describe your video content or topic...',
     outputLabel: 'YouTube Title',
+    tones: ['Happy', 'Sad', 'Nonchalant'],
     colors: {
       primary: 'bg-[#FF0000]',
       primaryHover: 'hover:bg-[#CC0000]',
@@ -93,6 +98,7 @@ export const platforms: Record<PlatformId, Platform> = {
     description: 'Stream titles that attract viewers',
     placeholder: 'What are you streaming today?',
     outputLabel: 'Stream Title',
+    tones: ['Happy', 'Sad', 'Nonchalant'],
     colors: {
       primary: 'bg-[#9146FF]',
       primaryHover: 'hover:bg-[#772CE8]',
@@ -110,6 +116,7 @@ export const platforms: Record<PlatformId, Platform> = {
     description: 'Turn your thoughts into viral meme text',
     placeholder: 'Describe a funny situation or feeling...',
     outputLabel: 'Meme Text',
+    tones: ['Relatable', 'Dark Humour', 'Chaotic'],
     colors: {
       primary: 'bg-[#00D26A]',
       primaryHover: 'hover:bg-[#00B85C]',
