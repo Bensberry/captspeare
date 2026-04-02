@@ -27,7 +27,7 @@ export default function AdminPage() {
   const fetchLogs = async () => {
     setIsLoading(true)
     try {
-      const res = await fetch(`/api/admin/logs?password=${encodeURIComponent(password)}`)
+      const res = await fetch(`/api/manager/logs?password=${encodeURIComponent(password)}`)
       const data = await res.json()
       
       if (res.ok) {
