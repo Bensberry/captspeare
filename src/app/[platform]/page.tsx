@@ -42,7 +42,7 @@ export default function PlatformPage({ params }: PageProps) {
   const [isContextExpanded, setIsContextExpanded] = useState(false)
   const [isParsingDoc, setIsParsingDoc] = useState(false)
   const [language, setLanguage] = useState("English")
-  const [includeTemplate, setIncludeTemplate] = useState(false)
+  const [includeTemplate, setIncludeTemplate] = useState(true)
   const [memeTemplateId, setMemeTemplateId] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   
