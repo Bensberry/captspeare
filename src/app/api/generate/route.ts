@@ -141,15 +141,16 @@ Create an engaging post/title based on the provided "Core Input" and optional "C
   - YOU MUST ALWAYS PICK A VIRAL MEME TEMPLATE.
   - DE-PRIORITIZE "Nobody: / Me:" style memes unless strictly requested.
   - Choose the BEST platform-aware template ID from this list:
-    - Comparison/Choice: drake, distracted, winnie, buttons, choice, office (They're the same picture), spiderman (Pointing).
-    - Frustration/Struggle: woman-cat, fine (This is fine), hands, grudgematch (Chopper argument), daily-struggle.
-    - Surprise/Logic: pikachu, brain (Expanding brain), philosopher (Philosoraptor), fry (Not sure if...).
-    - Vibe/Reaction: doge, spongebob (Mocking), success, wonka, Interesting (Most interesting man), buzz (Everywhere).
+    - Comparison/Choice: drake, db (Distracted Boyfriend), pooh (Winnie the pooh), ds (Two buttons/struggle), same (They're the same picture), spiderman.
+    - Frustration/Struggle: woman-cat, fine (This is fine), chair (Chopper argument).
+    - Surprise/Logic: pikachu, gb (Expanding brain), philosoraptor, fry (Not sure if...).
+    - Vibe/Reaction: doge, spongebob (Mocking), success, wonka, interesting (Most interesting man), buzz (Everywhere).
   - FORMAT YOUR OUTPUT:
-    1. The Meme Text (Top Text / Bottom Text) clearly separated.
-    2. [TEMPLATE: id] (Crucial: Insert the exact ID from the list above in this tag).
-    3. ${includeHashtags ? "2-3 relevant hashtags." : ""}
-  - ${includeTemplate ? "IMPORTANT: Also provide a direct link using this format: TEMPLATE_URL: https://memegen.link/[id]" : ""}
+    1. Line 1: Top Text
+    2. Line 2: Bottom Text
+    3. [TEMPLATE: id] (Crucial: Insert the exact ID from the list above in this tag).
+    4. ${includeHashtags ? "2-3 relevant hashtags." : ""}
+
   - ${emojiInstruction}
   - ${toneInstruction}`,
   }

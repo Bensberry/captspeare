@@ -44,6 +44,7 @@ export default function PlatformPage({ params }: PageProps) {
   const [language, setLanguage] = useState("English")
   const [includeTemplate, setIncludeTemplate] = useState(true)
   const [memeTemplateId, setMemeTemplateId] = useState<string | null>(null)
+  const [memeImageUrl, setMemeImageUrl] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
@@ -172,12 +173,24 @@ export default function PlatformPage({ params }: PageProps) {
         if (platformId === 'meme') {
           const match = result.match(/\[TEMPLATE:\s*(\w+[\-\w]*)\]/i)
           if (match) {
-            setMemeTemplateId(match[1])
-            // Remove the internal tag from the final display if you want, 
-            // or just leave it. Let's clean it up for a better UX.
+            const tempId = match[1]
+            setMemeTemplateId(tempId)
             result = result.replace(/\[TEMPLATE:\s*(\w+[\-\w]*)\]/gi, '').trim()
+            
+            // Build actual image URL with text
+            const escapeMemegen = (str: string) => {
+              return str.replace(/-/g, '--').replace(/_/g, '__').replace(/\s+/g, '_').replace(/\?/g, '~q').replace(/&/g, '~a').replace(/%/g, '~p').replace(/#/g, '~h').replace(/\//g, '~s')
+            }
+            const lines = result.split('\n').map((l: string) => l.trim()).filter((l: string) => l && !l.startsWith('#'))
+            if (lines.length > 0) {
+               const textPath = lines.slice(0, 2).map((l: string) => escapeMemegen(l)).join('/')
+               setMemeImageUrl(`https://api.memegen.link/images/${tempId}/${textPath}.png`)
+            } else {
+               setMemeImageUrl(`https://api.memegen.link/images/${tempId}.png`)
+            }
           } else {
             setMemeTemplateId(null)
+            setMemeImageUrl(null)
           }
         }
 
@@ -648,33 +661,19 @@ export default function PlatformPage({ params }: PageProps) {
                 )}
 
                 {/* Meme Preview Box */}
-                {!isProcessing && platformId === 'meme' && memeTemplateId && (
+                {!isProcessing && platformId === 'meme' && memeImageUrl && (
                   <div className="mt-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                     <div className="mb-4 flex items-center gap-2">
-                      <LinkIcon className={cn("h-5 w-5", platform.colors.accent)} />
-                      <h3 className="font-semibold text-foreground">Generated Meme Template</h3>
+                      <Sparkles className={cn("h-5 w-5", platform.colors.accent)} />
+                      <h3 className="font-semibold text-foreground">Generated Meme</h3>
                     </div>
-                    <div className="group relative overflow-hidden rounded-2xl border border-border/50 bg-black/20 p-2 shadow-2xl transition-all hover:scale-[1.01]">
+                    <div className="relative overflow-hidden rounded-2xl border border-border/50 bg-black/20 p-2 shadow-2xl transition-all">
                       <img 
-                        src={`https://api.memegen.link/images/${memeTemplateId}.png`} 
-                        alt="Meme Template"
-                        className="h-auto w-full rounded-xl transition-all group-hover:opacity-90"
+                        src={memeImageUrl} 
+                        alt="Generated Meme"
+                        className="h-auto w-full rounded-xl"
                       />
-                      <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover:opacity-100">
-                        <a 
-                          href={`https://memegen.link/${memeTemplateId}`} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-2 rounded-full bg-white/90 px-6 py-3 text-sm font-bold text-black shadow-2xl transition-transform hover:scale-110 active:scale-95"
-                        >
-                          <LinkIcon className="h-4 w-4" />
-                          Open in Meme Builder
-                        </a>
-                      </div>
                     </div>
-                    <p className="mt-4 text-center text-sm text-muted-foreground">
-                      This template was chosen specifically for your input. Click above to build the full meme!
-                    </p>
                   </div>
                 )}
               </div>
