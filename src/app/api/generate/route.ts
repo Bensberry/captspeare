@@ -107,37 +107,39 @@ Create an engaging post/title based on the provided "Core Input" and optional "C
     youtube: `${basePrompt}
 - Platform: YouTube (Title Only)
 - Rules:
-  - Generate exactly ONE title only
-  - Keep it under 60 characters
-  - Use power words: "Secret", "Ultimate", "Best", "How I", "#1"
-  - Make it click-worthy but NOT misleading
-  - Include the most searchable keywords
-  - Output ONLY the title text, nothing else
-  - ${includeHashtags ? "Can use 1-2 hashtags if appropriate for the title" : "Do NOT use any hashtags"}
+  - Generate exactly ONE title followed by hashtags on a new line (if requested).
+  - ${isLong 
+      ? 'Minimum 10 words. Max 90 characters. Make the title highly descriptive, keyword-rich, and use curiosity-driven storytelling. It should sound like a viral trending video title.' 
+      : 'Max 50 characters. Make the title extremely punchy, mobile-optimized, and high-impact.'}
+  - Style: Modern, catchy, and high-energy. Use "YouTube-speak" (e.g., "I tried...", "The truth about...", "This changed everything").
+  - Hook Strategy: Use one of these patterns: Curiosity Gap (e.g., "The Secret to..."), Listicle (e.g., "7 Ways..."), Benefit-Driven (e.g., "How I Gained..."), or Authority (e.g., "#1 Rule for...").
+  - Do NOT use clickbait that is misleading.
+  - Make the title flow naturally and sound human, not generated.
+  - Output format: [Title] \\n [Hashtags if requested]
+  - ${includeHashtags ? "Add 2-3 relevant hashtags on NEW LINE(S) below the title. Do NOT put hashtags in the title itself." : "Do NOT use any hashtags"}
   - ${emojiInstruction}
-  - ${toneInstruction}
-  - ${lengthInstruction}`,
+  - ${toneInstruction}`,
 
     twitch: `${basePrompt}
 - Platform: Twitch (Title Only)
 - Rules:
-  - Keep the title under 140 characters
-  - Make it energetic and inviting for potential viewers
-  - Hint at what the stream will contain (game, activity, vibe)
-  - Output ONLY the stream title, nothing else
-  - ${includeHashtags ? "Can use 1-2 stream-related hashtags if appropriate" : "Do NOT use any hashtags"}
+  - Keep the title under 140 characters.
+  - Target audience: Potential viewers browsing the directory.
+  - Vibe: High energy, catchy, inviting, and community-focused.
+  - ${isLong ? "Minimum 10 words. Provide a descriptive, catchy title that builds hype and explains exactly what the stream is about." : "Keep it short and punchy."}
+  - If a specific game is mentioned in context, integrate it naturally into the title's vibe.
+  - Output format: [Title] \\n [Hashtags if requested]
+  - ${includeHashtags ? "Add 1-2 relevant hashtags on NEW LINE(S) below the title. Do NOT put hashtags in the title itself." : "Do NOT use any hashtags"}
   - ${emojiInstruction}
-  - ${toneInstruction}
-  - ${lengthInstruction}`,
+  - ${toneInstruction}`,
 
     meme: `${basePrompt}
 - Platform: Internet Meme
 - Rules:
   - Pick the BEST meme format for this input ("TOP TEXT / BOTTOM TEXT", "POV:", or "Nobody: / Me when...")
-  - Output only that ONE meme, nothing else
-  - Keep it relatable, punchy and shareable
-  - Lean into internet humor and current meme culture
-  - ${includeHashtags ? "Can use 1-2 funny hashtags if they add to the meme" : "Do NOT use any hashtags"}
+  - Output only that ONE meme text, then hashtags on a new line if requested.
+  - Keep it relatable, punchy and shareable.
+  - ${includeHashtags ? "Add 1-2 hashtags on a separate line below the meme text." : "Do NOT use any hashtags"}
   - ${emojiInstruction}
   - ${toneInstruction}
   - ${lengthInstruction}`,
@@ -145,6 +147,7 @@ Create an engaging post/title based on the provided "Core Input" and optional "C
 
   return prompts[platform] || prompts.linkedin
 }
+
 
 export async function POST(req: Request) {
   try {
