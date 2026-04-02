@@ -3,7 +3,7 @@
 import { use, useState, useRef, useEffect } from "react"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { Feather, ArrowLeft, Mic, MicOff, Type, Wand2, Copy, RefreshCw, Check, Sparkles, Hash } from "lucide-react"
+import { Feather, ArrowLeft, Mic, MicOff, Type, Wand2, Copy, RefreshCw, Check, Sparkles, Hash, Paperclip, X } from "lucide-react"
 import { platforms, PlatformId } from "@/lib/platforms"
 import { getPlatformIcon } from "@/components/platform-icons"
 import { cn } from "@/lib/utils"
@@ -38,6 +38,9 @@ export default function PlatformPage({ params }: PageProps) {
   const [includeHashtags, setIncludeHashtags] = useState(true)
   const [isLong, setIsLong] = useState(false)
   const [tone, setTone] = useState<string>(platform.tones[0])
+  const [context, setContext] = useState("")
+  const [isParsingDoc, setIsParsingDoc] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
@@ -108,6 +111,33 @@ export default function PlatformPage({ params }: PageProps) {
     return `${mins}:${secs.toString().padStart(2, "0")}`
   }
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setIsParsingDoc(true)
+    const formData = new FormData()
+    formData.append("file", file)
+
+    try {
+      const res = await fetch("/api/parse-doc", {
+        method: "POST",
+        body: formData,
+      })
+      const data = await res.json()
+      if (data.text) {
+        setContext(prev => (prev ? prev + "\n" + data.text : data.text))
+      } else if (data.error) {
+        alert(`Error: ${data.error}`)
+      }
+    } catch {
+      alert("Failed to parse document. Please try again.")
+    } finally {
+      setIsParsingDoc(false)
+      if (fileInputRef.current) fileInputRef.current.value = ""
+    }
+  }
+
   const handleGenerate = async () => {
     if (!inputText.trim()) return
     setIsProcessing(true)
@@ -118,6 +148,7 @@ export default function PlatformPage({ params }: PageProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           text: inputText, 
+          context,
           platform: platform.id, 
           autoEmoji,
           tone,
@@ -238,6 +269,54 @@ export default function PlatformPage({ params }: PageProps) {
                 <Mic className="h-4 w-4" />
                 Voice
               </button>
+            </div>
+          </div>
+
+          {/* Context Section */}
+          <div className="mb-6">
+            <div className="mb-2 flex items-center justify-between">
+              <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <Sparkles className="h-3.5 w-3.5" />
+                Additional Context (Optional)
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileUpload}
+                  className="hidden"
+                  accept=".pdf,.docx,.txt"
+                />
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isParsingDoc}
+                  className="flex items-center gap-1.5 rounded-lg border border-border/50 bg-secondary/30 px-3 py-1.5 text-xs font-medium text-muted-foreground transition-all hover:bg-secondary hover:text-foreground disabled:opacity-50"
+                >
+                  {isParsingDoc ? (
+                    <RefreshCw className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <Paperclip className="h-3 w-3" />
+                  )}
+                  {isParsingDoc ? "Parsing..." : "Upload PDF/DOC"}
+                </button>
+                {context && (
+                  <button
+                    onClick={() => setContext("")}
+                    className="flex items-center gap-1 rounded-lg border border-red-500/20 bg-red-500/5 px-2 py-1.5 text-xs font-medium text-red-400 hover:bg-red-500/10 transition-colors"
+                  >
+                    <X className="h-3 w-3" />
+                    Clear
+                  </button>
+                )}
+              </div>
+            </div>
+            <div className="relative overflow-hidden rounded-xl border border-border/40 bg-card/30 backdrop-blur-sm">
+              <textarea
+                value={context}
+                onChange={(e) => setContext(e.target.value)}
+                placeholder="Paste background info, website content, or upload documents to provide more context for your caption..."
+                className="min-h-[80px] w-full resize-none bg-transparent p-3 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none"
+              />
             </div>
           </div>
 
