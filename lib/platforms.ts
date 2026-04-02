@@ -62,7 +62,7 @@ export const platforms: Record<PlatformId, Platform> = {
     description: 'Punchy tweets that go viral',
     placeholder: 'What thought do you want to share with the world?',
     outputLabel: 'Tweet',
-    tones: ['Happy', 'Sad', 'Nonchalant'],
+    tones: ['Happy', 'Sad', 'Nonchalant', 'Sarcastic'],
     colors: {
       primary: 'bg-[#1d9bf0]',
       primaryHover: 'hover:bg-[#1a8cd8]',

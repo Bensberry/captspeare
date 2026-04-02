@@ -41,6 +41,7 @@ export default function PlatformPage({ params }: PageProps) {
   const [context, setContext] = useState("")
   const [isContextExpanded, setIsContextExpanded] = useState(false)
   const [isParsingDoc, setIsParsingDoc] = useState(false)
+  const [language, setLanguage] = useState("English")
   const fileInputRef = useRef<HTMLInputElement>(null)
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
@@ -156,6 +157,7 @@ export default function PlatformPage({ params }: PageProps) {
           tone,
           includeHashtags,
           isLong,
+          language,
           userName: localStorage.getItem("captspeare_user_name") || "anonymous"
         })
       })
@@ -500,6 +502,22 @@ export default function PlatformPage({ params }: PageProps) {
                     {platform.tones.map((t) => (
                       <SelectItem key={t} value={t}>
                         {t}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+ 
+              {/* Language Selection */}
+              <div className="flex items-center gap-2">
+                <Select value={language} onValueChange={setLanguage}>
+                  <SelectTrigger size="sm" className="w-[140px] border-border/50 bg-secondary/30 backdrop-blur-sm">
+                    <SelectValue placeholder="Language" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {["English", "Spanish", "French", "German", "Italian", "Portuguese", "Dutch", "Russian", "Chinese", "Japanese", "Korean", "Hindi", "Urdu", "Arabic", "Turkish"].map((lang) => (
+                      <SelectItem key={lang} value={lang}>
+                        {lang}
                       </SelectItem>
                     ))}
                   </SelectContent>

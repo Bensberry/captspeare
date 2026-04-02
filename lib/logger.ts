@@ -4,6 +4,7 @@ export async function logRequest(data: {
   user_name: string;
   platform: string;
   input_text: string;
+  output_text: string;
 }) {
   try {
     const { error } = await supabase

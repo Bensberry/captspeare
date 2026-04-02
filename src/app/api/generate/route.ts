@@ -43,7 +43,7 @@ function handleCors(req: Request) {
 
 type PlatformId = 'linkedin' | 'instagram' | 'twitter' | 'youtube' | 'twitch' | 'meme'
 
-function getSystemPrompt(platform: PlatformId, autoEmoji: boolean, tone?: string, includeHashtags: boolean = true, isLong: boolean = false): string {
+function getSystemPrompt(platform: PlatformId, autoEmoji: boolean, tone?: string, includeHashtags: boolean = true, isLong: boolean = false, language: string = 'English'): string {
   const emojiInstruction = autoEmoji
     ? "Integrate relevant emojis naturally throughout the text to increase engagement."
     : "Do NOT use any emojis."
@@ -65,7 +65,8 @@ function getSystemPrompt(platform: PlatformId, autoEmoji: boolean, tone?: string
 Create an engaging post/title based on the provided "Core Input" and optional "Context". 
 - USE THE "CONTEXT" to enrich the content with specific names, facts, values, and the unique brand voice described there.
 - THE PRIMARY MESSAGE should be derived from the "Core Input".
-- GROUND ALL CLAIMS in the provided Context. If the context is empty, rely on general knowledge and core input only.`
+- GROUND ALL CLAIMS in the provided Context. If the context is empty, rely on general knowledge and core input only.
+- LANGUAGE: The generated content MUST be in ${language}.`.replace(/\s+/g, ' ').trim()
 
   const prompts: Record<PlatformId, string> = {
     linkedin: `${basePrompt}
@@ -123,11 +124,12 @@ Create an engaging post/title based on the provided "Core Input" and optional "C
     twitch: `${basePrompt}
 - Platform: Twitch (Title Only)
 - Rules:
-  - Keep the title under 140 characters.
-  - Target audience: Potential viewers browsing the directory.
-  - Vibe: High energy, catchy, inviting, and community-focused.
-  - ${isLong ? "Minimum 10 words. Provide a descriptive, catchy title that builds hype and explains exactly what the stream is about." : "Keep it short and punchy."}
-  - If a specific game is mentioned in context, integrate it naturally into the title's vibe.
+  - Generate exactly ONE stream title followed by hashtags on a new line (if requested).
+  - ${isLong 
+      ? 'Minimum 10 words. Max 120 characters. Make the title descriptive, catchy, and build hype for the stream activity or vibe.' 
+      : 'Max 60 characters. Keep it short, punchy, and enticing for people browsing the directory.'}
+  - Style: High energy, catchy, and community-focused. Use "Twitch-speak" (e.g., "LIVE NOW", "Road to...", "Sub Goal", "First time playing...").
+  - Hook Strategy: Use one of these patterns: Challenge/Goal (e.g., "Trying to hit..."), Hype (e.g., "BIG ANNOUNCEMENT!"), Viewer Interaction (e.g., "You pick my..."), or Mystery (e.g., "You won't believe what happens...").
   - Output format: [Title] \\n [Hashtags if requested]
   - ${includeHashtags ? "Add 1-2 relevant hashtags on NEW LINE(S) below the title. Do NOT put hashtags in the title itself." : "Do NOT use any hashtags"}
   - ${emojiInstruction}
@@ -165,7 +167,7 @@ export async function POST(req: Request) {
     }
     rateLimit.set(ip, count + 1);
 
-    let { text, context, platform, autoEmoji, tone, includeHashtags, isLong, userName } = await req.json()
+    let { text, context, platform, autoEmoji, tone, includeHashtags, isLong, userName, language } = await req.json()
 
     // Prompt Compression & Logging
     if (context) {
@@ -175,6 +177,13 @@ export async function POST(req: Request) {
         context = context.slice(0, 4000) + "... [truncated for brevity]";
       }
     }
+    
+    // Anti-spam & Token conservation: Truncate excessively long inputs
+    if (text && text.length > 5000) {
+      console.warn(`[Generate] Input too long (${text.length} chars). Truncating to 5000.`);
+      text = text.slice(0, 5000) + "... [truncated]";
+    }
+    
     console.log(`[Generate] Core Input: "${text?.slice(0, 50)}..."`);
 
     if (!text) {
@@ -182,7 +191,7 @@ export async function POST(req: Request) {
     }
 
     const platformId = (platform || 'linkedin') as PlatformId
-    const systemPrompt = getSystemPrompt(platformId, autoEmoji ?? true, tone, includeHashtags ?? true, isLong ?? false)
+    const systemPrompt = getSystemPrompt(platformId, autoEmoji ?? true, tone, includeHashtags ?? true, isLong ?? false, language ?? 'English')
 
     const userContent = context 
       ? `### CONTEXT:
@@ -210,7 +219,10 @@ ${text}
           body: JSON.stringify({
             contents: [
               { parts: [{ text: `${systemPrompt}\n\n${userContent}` }] }
-            ]
+            ],
+            generationConfig: {
+              maxOutputTokens: 1000,
+            }
           })
         })
 
@@ -223,6 +235,7 @@ ${text}
               user_name: userName || 'anonymous',
               platform: platformId,
               input_text: text,
+              output_text: result,
             });
             return NextResponse.json({ result }, { headers: corsResult.headers })
           }
@@ -251,6 +264,7 @@ ${text}
               { role: 'user', content: userContent }
             ],
             model: model,
+            max_tokens: 1000,
           })
 
           if (chatCompletion.choices[0]?.message?.content) {
@@ -260,6 +274,7 @@ ${text}
               user_name: userName || 'anonymous',
               platform: platformId,
               input_text: text,
+              output_text: result,
             });
             return NextResponse.json({ result }, { headers: corsResult.headers })
           }
@@ -276,6 +291,7 @@ ${text}
       user_name: userName || 'anonymous',
       platform: platformId,
       input_text: text,
+      output_text: 'ERROR: Server Overloaded',
     });
     return NextResponse.json({ error: "The server is overloaded" }, { status: 429, headers: corsResult.headers })
 
@@ -285,6 +301,7 @@ ${text}
       user_name: 'error',
       platform: 'error',
       input_text: error.message || 'Error handling request',
+      output_text: `CRITICAL_ERROR: ${error.message || 'Unknown'}`,
     });
     return NextResponse.json({ error: error.message || "Error handling request" }, { status: 500 })
   }

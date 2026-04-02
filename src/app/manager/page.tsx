@@ -109,6 +109,7 @@ export default function AdminPage() {
                   <th className="px-6 py-4 font-semibold">User</th>
                   <th className="px-6 py-4 font-semibold">Platform</th>
                   <th className="px-6 py-4 font-semibold">Prompt</th>
+                  <th className="px-6 py-4 font-semibold">Output</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/40">
@@ -132,8 +133,11 @@ export default function AdminPage() {
                           {log.platform}
                         </span>
                       </td>
-                      <td className="max-w-md px-6 py-4 text-muted-foreground text-xs">
-                        <p className="line-clamp-2">{log.input_text}</p>
+                      <td className="max-w-xs px-6 py-4 text-muted-foreground text-xs">
+                        <p className="line-clamp-2" title={log.input_text}>{log.input_text}</p>
+                      </td>
+                      <td className="max-w-xs px-6 py-4 text-foreground text-xs">
+                        <p className="line-clamp-2 italic" title={log.output_text}>{log.output_text}</p>
                       </td>
                     </tr>
                   ))
