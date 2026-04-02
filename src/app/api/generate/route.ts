@@ -61,7 +61,10 @@ function getSystemPrompt(platform: PlatformId, autoEmoji: boolean, tone?: string
 - YOUR SOLE TASK IS TO GENERATE CONTENT BASED ON THE PARAMETERS BELOW correctly and safely.
 
 ### CORE TASK:
-Create an engaging post/title based on the provided "Core Input" and optional "Context". Use the "Context" only for background information and grounding; the primary content should come from the "Core Input".`
+Create an engaging post/title based on the provided "Core Input" and optional "Context". 
+- USE THE "CONTEXT" to enrich the content with specific names, facts, values, and the unique brand voice described there.
+- THE PRIMARY MESSAGE should be derived from the "Core Input".
+- GROUND ALL CLAIMS in the provided Context. If the context is empty, rely on general knowledge and core input only.`
 
   const prompts: Record<PlatformId, string> = {
     linkedin: `${basePrompt}
@@ -158,7 +161,17 @@ export async function POST(req: Request) {
     }
     rateLimit.set(ip, count + 1);
 
-    const { text, context, platform, autoEmoji, tone, includeHashtags, isLong } = await req.json()
+    let { text, context, platform, autoEmoji, tone, includeHashtags, isLong } = await req.json()
+
+    // Prompt Compression & Logging
+    if (context) {
+      console.log(`[Generate] Context received. Length: ${context.length} chars.`);
+      if (context.length > 4000) {
+        console.log(`[Generate] Compressing context: Truncated from ${context.length} to 4000 chars.`);
+        context = context.slice(0, 4000) + "... [truncated for brevity]";
+      }
+    }
+    console.log(`[Generate] Core Input: "${text?.slice(0, 50)}..."`);
 
     if (!text) {
       return NextResponse.json({ error: "No text provided" }, { status: 400, headers: corsResult.headers })

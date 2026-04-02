@@ -3,7 +3,7 @@
 import { use, useState, useRef, useEffect } from "react"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { Feather, ArrowLeft, Mic, MicOff, Type, Wand2, Copy, RefreshCw, Check, Sparkles, Hash, Paperclip, X } from "lucide-react"
+import { Feather, ArrowLeft, Mic, MicOff, Type, Wand2, Copy, RefreshCw, Check, Sparkles, Hash, Paperclip, X, ChevronDown, ChevronUp } from "lucide-react"
 import { platforms, PlatformId } from "@/lib/platforms"
 import { getPlatformIcon } from "@/components/platform-icons"
 import { cn } from "@/lib/utils"
@@ -39,6 +39,7 @@ export default function PlatformPage({ params }: PageProps) {
   const [isLong, setIsLong] = useState(false)
   const [tone, setTone] = useState<string>(platform.tones[0])
   const [context, setContext] = useState("")
+  const [isContextExpanded, setIsContextExpanded] = useState(false)
   const [isParsingDoc, setIsParsingDoc] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   
@@ -127,6 +128,7 @@ export default function PlatformPage({ params }: PageProps) {
       const data = await res.json()
       if (data.text) {
         setContext(prev => (prev ? prev + "\n" + data.text : data.text))
+        setIsContextExpanded(true)
       } else if (data.error) {
         alert(`Error: ${data.error}`)
       }
@@ -274,50 +276,76 @@ export default function PlatformPage({ params }: PageProps) {
 
           {/* Context Section */}
           <div className="mb-6">
-            <div className="mb-2 flex items-center justify-between">
-              <label className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <Sparkles className="h-3.5 w-3.5" />
+            <button
+              onClick={() => setIsContextExpanded(!isContextExpanded)}
+              className="flex w-full items-center justify-between rounded-xl border border-border/40 bg-card/30 px-4 py-3 backdrop-blur-sm transition-all hover:bg-card/50"
+            >
+              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                <Sparkles className="h-4 w-4" />
                 Additional Context (Optional)
-              </label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleFileUpload}
-                  className="hidden"
-                  accept=".pdf,.docx,.txt"
-                />
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={isParsingDoc}
-                  className="flex items-center gap-1.5 rounded-lg border border-border/50 bg-secondary/30 px-3 py-1.5 text-xs font-medium text-muted-foreground transition-all hover:bg-secondary hover:text-foreground disabled:opacity-50"
-                >
-                  {isParsingDoc ? (
-                    <RefreshCw className="h-3 w-3 animate-spin" />
-                  ) : (
-                    <Paperclip className="h-3 w-3" />
-                  )}
-                  {isParsingDoc ? "Parsing..." : "Upload PDF/DOC"}
-                </button>
                 {context && (
-                  <button
-                    onClick={() => setContext("")}
-                    className="flex items-center gap-1 rounded-lg border border-red-500/20 bg-red-500/5 px-2 py-1.5 text-xs font-medium text-red-400 hover:bg-red-500/10 transition-colors"
-                  >
-                    <X className="h-3 w-3" />
-                    Clear
-                  </button>
+                  <span className="ml-2 rounded-full bg-secondary px-2 py-0.5 text-[10px] font-bold text-foreground">
+                    Active
+                  </span>
                 )}
               </div>
-            </div>
-            <div className="relative overflow-hidden rounded-xl border border-border/40 bg-card/30 backdrop-blur-sm">
-              <textarea
-                value={context}
-                onChange={(e) => setContext(e.target.value)}
-                placeholder="Paste background info, website content, or upload documents to provide more context for your caption..."
-                className="min-h-[80px] w-full resize-none bg-transparent p-3 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none"
-              />
-            </div>
+              <div className="flex items-center gap-3">
+                {context && (
+                  <span className="text-[10px] text-muted-foreground">
+                    {context.length > 50 ? `${context.slice(0, 50)}...` : context}
+                  </span>
+                )}
+                {isContextExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              </div>
+            </button>
+
+            {isContextExpanded && (
+              <div className="mt-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="mb-2 flex items-center justify-between px-1">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileUpload}
+                      className="hidden"
+                      accept=".pdf,.docx,.txt"
+                    />
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isParsingDoc}
+                      className="flex items-center gap-1.5 rounded-lg border border-border/50 bg-secondary/30 px-3 py-1.5 text-xs font-medium text-muted-foreground transition-all hover:bg-secondary hover:text-foreground disabled:opacity-50"
+                    >
+                      {isParsingDoc ? (
+                        <RefreshCw className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <Paperclip className="h-3 w-3" />
+                      )}
+                      {isParsingDoc ? "Parsing..." : "Upload PDF/DOC"}
+                    </button>
+                  </div>
+                  {context && (
+                    <button
+                      onClick={() => setContext("")}
+                      className="flex items-center gap-1 rounded-lg border border-red-500/20 bg-red-500/5 px-2 py-1.5 text-xs font-medium text-red-400 hover:bg-red-500/10 transition-colors"
+                    >
+                      <X className="h-3 w-3" />
+                      Clear
+                    </button>
+                  )}
+                </div>
+                <div className="relative overflow-hidden rounded-xl border border-border/40 bg-card/30 backdrop-blur-sm">
+                  <textarea
+                    value={context}
+                    onChange={(e) => setContext(e.target.value)}
+                    placeholder="Paste background info, website content, or upload documents to provide more context for your caption..."
+                    className="min-h-[120px] w-full resize-none bg-transparent p-3 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none"
+                  />
+                  <div className="absolute right-3 bottom-2 text-[10px] text-muted-foreground/40">
+                    {context.length} / 4000 (compressed if larger)
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Input Card */}
