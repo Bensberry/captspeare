@@ -3,7 +3,7 @@
 import { use, useState, useRef, useEffect } from "react"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { Feather, ArrowLeft, Mic, MicOff, Type, Wand2, Copy, RefreshCw, Check, Sparkles, Hash, Paperclip, X, ChevronDown, ChevronUp } from "lucide-react"
+import { Feather, ArrowLeft, Mic, MicOff, Type, Wand2, Copy, RefreshCw, Check, Sparkles, Hash, Paperclip, X, ChevronDown, ChevronUp, Link as LinkIcon } from "lucide-react"
 import { platforms, PlatformId } from "@/lib/platforms"
 import { getPlatformIcon } from "@/components/platform-icons"
 import { cn } from "@/lib/utils"
@@ -42,6 +42,8 @@ export default function PlatformPage({ params }: PageProps) {
   const [isContextExpanded, setIsContextExpanded] = useState(false)
   const [isParsingDoc, setIsParsingDoc] = useState(false)
   const [language, setLanguage] = useState("English")
+  const [includeTemplate, setIncludeTemplate] = useState(false)
+  const [memeTemplateId, setMemeTemplateId] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
@@ -158,12 +160,28 @@ export default function PlatformPage({ params }: PageProps) {
           includeHashtags,
           isLong,
           language,
+          includeTemplate,
           userName: localStorage.getItem("captspeare_user_name") || "anonymous"
         })
       })
       const data = await res.json()
       if (data.result) {
-        setOutputText(data.result)
+        let result = data.result
+        
+        // Parse Template ID if it exists
+        if (platformId === 'meme') {
+          const match = result.match(/\[TEMPLATE:\s*(\w+[\-\w]*)\]/i)
+          if (match) {
+            setMemeTemplateId(match[1])
+            // Remove the internal tag from the final display if you want, 
+            // or just leave it. Let's clean it up for a better UX.
+            result = result.replace(/\[TEMPLATE:\s*(\w+[\-\w]*)\]/gi, '').trim()
+          } else {
+            setMemeTemplateId(null)
+          }
+        }
+
+        setOutputText(result)
       } else {
         setOutputText(`Error: ${data.error}`)
       }
@@ -424,8 +442,8 @@ export default function PlatformPage({ params }: PageProps) {
           </div>
 
           {/* Generate Options */}
-          <div className="mt-4 flex items-center justify-between">
-            <div className="flex items-center gap-4">
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-x-10 gap-y-6 px-2">
+            <div className="flex flex-wrap items-center justify-center gap-6">
               <span className="text-sm text-muted-foreground">
                 {inputText.length} characters
               </span>
@@ -491,6 +509,29 @@ export default function PlatformPage({ params }: PageProps) {
                 </div>
                 <span className="text-sm text-muted-foreground">{isLong ? "Long" : "Short"}</span>
               </label>
+ 
+              {/* Meme Template Toggle (Only for Meme platform) */}
+              {platformId === 'meme' && (
+                <label className="flex cursor-pointer items-center gap-2">
+                  <div className="relative">
+                    <input
+                      type="checkbox"
+                      className="sr-only"
+                      checked={includeTemplate}
+                      onChange={(e) => setIncludeTemplate(e.target.checked)}
+                    />
+                    <div className={cn(
+                      "h-5 w-9 rounded-full transition-colors",
+                      includeTemplate ? platform.colors.primary : "bg-secondary"
+                    )} />
+                    <div className={cn(
+                      "absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform",
+                      includeTemplate ? "left-5" : "left-0.5"
+                    )} />
+                  </div>
+                  <span className="text-sm text-muted-foreground">Template Link</span>
+                </label>
+              )}
 
               {/* Tone Selection */}
               <div className="ml-2 flex items-center gap-2">
@@ -603,6 +644,37 @@ export default function PlatformPage({ params }: PageProps) {
                 ) : (
                   <div className="whitespace-pre-wrap rounded-xl bg-secondary/30 p-4 text-foreground">
                     {outputText}
+                  </div>
+                )}
+
+                {/* Meme Preview Box */}
+                {!isProcessing && platformId === 'meme' && memeTemplateId && (
+                  <div className="mt-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className="mb-4 flex items-center gap-2">
+                      <LinkIcon className={cn("h-5 w-5", platform.colors.accent)} />
+                      <h3 className="font-semibold text-foreground">Generated Meme Template</h3>
+                    </div>
+                    <div className="group relative overflow-hidden rounded-2xl border border-border/50 bg-black/20 p-2 shadow-2xl transition-all hover:scale-[1.01]">
+                      <img 
+                        src={`https://api.memegen.link/images/${memeTemplateId}.png`} 
+                        alt="Meme Template"
+                        className="h-auto w-full rounded-xl transition-all group-hover:opacity-90"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover:opacity-100">
+                        <a 
+                          href={`https://memegen.link/${memeTemplateId}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 rounded-full bg-white/90 px-6 py-3 text-sm font-bold text-black shadow-2xl transition-transform hover:scale-110 active:scale-95"
+                        >
+                          <LinkIcon className="h-4 w-4" />
+                          Open in Meme Builder
+                        </a>
+                      </div>
+                    </div>
+                    <p className="mt-4 text-center text-sm text-muted-foreground">
+                      This template was chosen specifically for your input. Click above to build the full meme!
+                    </p>
                   </div>
                 )}
               </div>

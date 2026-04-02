@@ -43,7 +43,7 @@ function handleCors(req: Request) {
 
 type PlatformId = 'linkedin' | 'instagram' | 'twitter' | 'youtube' | 'twitch' | 'meme'
 
-function getSystemPrompt(platform: PlatformId, autoEmoji: boolean, tone?: string, includeHashtags: boolean = true, isLong: boolean = false, language: string = 'English'): string {
+function getSystemPrompt(platform: PlatformId, autoEmoji: boolean, tone?: string, includeHashtags: boolean = true, isLong: boolean = false, language: string = 'English', includeTemplate: boolean = false): string {
   const emojiInstruction = autoEmoji
     ? "Integrate relevant emojis naturally throughout the text to increase engagement."
     : "Do NOT use any emojis."
@@ -138,13 +138,20 @@ Create an engaging post/title based on the provided "Core Input" and optional "C
     meme: `${basePrompt}
 - Platform: Internet Meme
 - Rules:
-  - Pick the BEST meme format for this input ("TOP TEXT / BOTTOM TEXT", "POV:", or "Nobody: / Me when...")
-  - Output only that ONE meme text, then hashtags on a new line if requested.
-  - Keep it relatable, punchy and shareable.
-  - ${includeHashtags ? "Add 1-2 hashtags on a separate line below the meme text." : "Do NOT use any hashtags"}
+  - YOU MUST ALWAYS PICK A VIRAL MEME TEMPLATE.
+  - DE-PRIORITIZE "Nobody: / Me:" style memes unless strictly requested.
+  - Choose the BEST platform-aware template ID from this list:
+    - Comparison/Choice: drake, distracted, winnie, buttons, choice, office (They're the same picture), spiderman (Pointing).
+    - Frustration/Struggle: woman-cat, fine (This is fine), hands, grudgematch (Chopper argument), daily-struggle.
+    - Surprise/Logic: pikachu, brain (Expanding brain), philosopher (Philosoraptor), fry (Not sure if...).
+    - Vibe/Reaction: doge, spongebob (Mocking), success, wonka, Interesting (Most interesting man), buzz (Everywhere).
+  - FORMAT YOUR OUTPUT:
+    1. The Meme Text (Top Text / Bottom Text) clearly separated.
+    2. [TEMPLATE: id] (Crucial: Insert the exact ID from the list above in this tag).
+    3. ${includeHashtags ? "2-3 relevant hashtags." : ""}
+  - ${includeTemplate ? "IMPORTANT: Also provide a direct link using this format: TEMPLATE_URL: https://memegen.link/[id]" : ""}
   - ${emojiInstruction}
-  - ${toneInstruction}
-  - ${lengthInstruction}`,
+  - ${toneInstruction}`,
   }
 
   return prompts[platform] || prompts.linkedin
@@ -167,7 +174,7 @@ export async function POST(req: Request) {
     }
     rateLimit.set(ip, count + 1);
 
-    let { text, context, platform, autoEmoji, tone, includeHashtags, isLong, userName, language } = await req.json()
+    let { text, context, platform, autoEmoji, tone, includeHashtags, isLong, userName, language, includeTemplate } = await req.json()
 
     // Prompt Compression & Logging
     if (context) {
@@ -191,7 +198,7 @@ export async function POST(req: Request) {
     }
 
     const platformId = (platform || 'linkedin') as PlatformId
-    const systemPrompt = getSystemPrompt(platformId, autoEmoji ?? true, tone, includeHashtags ?? true, isLong ?? false, language ?? 'English')
+    const systemPrompt = getSystemPrompt(platformId, autoEmoji ?? true, tone, includeHashtags ?? true, isLong ?? false, language ?? 'English', includeTemplate ?? false)
 
     const userContent = context 
       ? `### CONTEXT:

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { cn } from "@/lib/utils"
-import { Shield, Lock, Search, RefreshCw, Clock, ExternalLink } from "lucide-react"
+import { Shield, Lock, Search, RefreshCw, Clock } from "lucide-react"
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
