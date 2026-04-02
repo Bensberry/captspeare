@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Feather, Sparkles, ArrowRight } from "lucide-react"
 import { platformList } from "@/lib/platforms"
@@ -7,8 +8,64 @@ import { getPlatformIcon } from "@/components/platform-icons"
 import { cn } from "@/lib/utils"
 
 export default function Home() {
+  const [userName, setUserName] = useState<string | null>(null)
+  const [tempName, setTempName] = useState("")
+
+  useEffect(() => {
+    const savedName = localStorage.getItem("captspeare_user_name")
+    if (savedName) {
+      setUserName(savedName)
+    }
+  }, [])
+
+  const handleSetName = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (tempName.trim()) {
+      localStorage.setItem("captspeare_user_name", tempName.trim())
+      setUserName(tempName.trim())
+    }
+  }
+
   return (
     <main className="min-h-screen bg-background">
+      {/* Name Overlay */}
+      {!userName && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-md">
+          <div className="w-full max-w-md animate-in fade-in zoom-in duration-300 rounded-2xl border border-border/50 bg-card/50 p-8 shadow-2xl backdrop-blur-xl">
+            <div className="mb-8 text-center">
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-cyan-500/10 ring-1 ring-cyan-500/20">
+                <Feather className="h-6 w-6 text-cyan-400" />
+              </div>
+              <h1 className="text-2xl font-bold tracking-tight">Welcome to CaptSpeare</h1>
+              <p className="mt-2 text-sm text-muted-foreground text-balance">
+                Please enter your name to start generating social media gold.
+              </p>
+            </div>
+
+            <form onSubmit={handleSetName} className="space-y-4">
+              <div className="space-y-2">
+                <input
+                  type="text"
+                  required
+                  value={tempName}
+                  onChange={(e) => setTempName(e.target.value)}
+                  placeholder="Your Name"
+                  autoFocus
+                  className="w-full rounded-xl border border-border/50 bg-secondary/30 py-2.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/20"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={!tempName.trim()}
+                className="w-full rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 py-2.5 text-sm font-semibold text-white shadow-lg transition-all hover:scale-[1.02] active:scale-100 disabled:opacity-50"
+              >
+                Let's Go
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 border-b border-border/40 bg-background/80 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">

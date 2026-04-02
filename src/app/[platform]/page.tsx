@@ -155,7 +155,8 @@ export default function PlatformPage({ params }: PageProps) {
           autoEmoji,
           tone,
           includeHashtags,
-          isLong
+          isLong,
+          userName: localStorage.getItem("captspeare_user_name") || "anonymous"
         })
       })
       const data = await res.json()

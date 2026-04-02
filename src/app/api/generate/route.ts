@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import Groq from 'groq-sdk';
 import { LRUCache } from 'lru-cache';
+import { logRequest } from '@/lib/logger';
 
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY || '',
@@ -161,7 +162,7 @@ export async function POST(req: Request) {
     }
     rateLimit.set(ip, count + 1);
 
-    let { text, context, platform, autoEmoji, tone, includeHashtags, isLong } = await req.json()
+    let { text, context, platform, autoEmoji, tone, includeHashtags, isLong, userName } = await req.json()
 
     // Prompt Compression & Logging
     if (context) {
@@ -213,7 +214,14 @@ ${text}
         if (response.ok) {
           const data = await response.json()
           if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
-            return NextResponse.json({ result: data.candidates[0].content.parts[0].text }, { headers: corsResult.headers })
+            const result = data.candidates[0].content.parts[0].text;
+            // Async logging
+            logRequest({
+              user_name: userName || 'anonymous',
+              platform: platformId,
+              input_text: text,
+            });
+            return NextResponse.json({ result }, { headers: corsResult.headers })
           }
         } else if (response.status !== 429) {
           console.warn(`Gemini API Error ${response.status}: Falling back to Groq.`)
@@ -243,7 +251,14 @@ ${text}
           })
 
           if (chatCompletion.choices[0]?.message?.content) {
-            return NextResponse.json({ result: chatCompletion.choices[0].message.content }, { headers: corsResult.headers })
+            const result = chatCompletion.choices[0].message.content;
+            // Async logging
+            logRequest({
+              user_name: userName || 'anonymous',
+              platform: platformId,
+              input_text: text,
+            });
+            return NextResponse.json({ result }, { headers: corsResult.headers })
           }
         } catch (error: any) {
           console.error(`Groq Error (${model}):`, error)
@@ -254,10 +269,20 @@ ${text}
       }
     }
 
+    logRequest({
+      user_name: userName || 'anonymous',
+      platform: platformId,
+      input_text: text,
+    });
     return NextResponse.json({ error: "The server is overloaded" }, { status: 429, headers: corsResult.headers })
 
   } catch (error: any) {
     console.error("Error generating post:", error)
+    logRequest({
+      user_name: 'error',
+      platform: 'error',
+      input_text: error.message || 'Error handling request',
+    });
     return NextResponse.json({ error: error.message || "Error handling request" }, { status: 500 })
   }
 }
